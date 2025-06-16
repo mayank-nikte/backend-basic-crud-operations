@@ -1,8 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Book;
-import com.example.demo.repository.BookRepository;
-
+import com.example.demo.service.BookService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,56 +13,53 @@ import java.util.List;
 @RequestMapping("/books")
 public class BookController {
 
+    private final BookService bookService;
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
 
-    private final BookRepository bookRepo;
-
-    public BookController(BookRepository bookRepo) {
-        this.bookRepo = bookRepo;
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> getBookById(@PathVariable("id") Long id) {
+    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
         logger.info("Fetching book with ID: {}", id);
-        return bookRepo.findById(id)
-                .map(book -> {
-                    logger.info("Book found: {}", book);
-                    return ResponseEntity.ok(book);
-                })
-                .orElseGet(() -> {
-                    logger.warn("Book with ID {} not found", id);
-                    return ResponseEntity.notFound().build();
-                });
+        return ResponseEntity.ok(bookService.getBookById(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+        logger.info("Creating book: {}", book);
+        return ResponseEntity.ok(bookService.createBook(book));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable("id") Long id, @RequestBody Book updatedBook) {
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book book) {
         logger.info("Updating book with ID: {}", id);
-        return bookRepo.findById(id).map(book -> {
-            book.setName(updatedBook.getName());
-            book.setAuthor(updatedBook.getAuthor());
-            book.setPrice(updatedBook.getPrice());
-            Book savedBook = bookRepo.save(book);
-            logger.info("Book updated successfully: {}", savedBook);
-            return ResponseEntity.ok(savedBook);
-        }).orElseGet(() -> {
-            logger.warn("Book with ID {} not found for update", id);
-            return ResponseEntity.notFound().build();
-        });
+        return ResponseEntity.ok(bookService.updateBook(id, book));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         logger.info("Deleting book with ID: {}", id);
-        return bookRepo.findById(id).map(book -> {
-            bookRepo.delete(book);
-            logger.info("Book with ID {} deleted", id);
-            return ResponseEntity.ok().<Void>build();
-        }).orElseGet(() -> {
-            logger.warn("Book with ID {} not found for deletion", id);
-            return ResponseEntity.notFound().build();
-        });
+        bookService.deleteBook(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/search/by-name")
+    public ResponseEntity<List<Book>> searchByName(@RequestParam String name) {
+        logger.info("Searching books by name: {}", name);
+        return ResponseEntity.ok(bookService.searchByName(name));
+    }
+
+    @GetMapping("/search/by-author")
+    public ResponseEntity<List<Book>> searchByAuthor(@RequestParam String author) {
+        logger.info("Searching books by author: {}", author);
+        return ResponseEntity.ok(bookService.searchByAuthor(author));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Book>> getAllBooks() {
+        logger.info("Fetching all books");
+        return ResponseEntity.ok(bookService.getAllBooks());
     }
 }
-
-
