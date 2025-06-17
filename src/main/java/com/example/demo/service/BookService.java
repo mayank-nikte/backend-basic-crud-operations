@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.exception.BookNotFoundException;
+import com.example.demo.repository.AuthorRepository;
+import com.example.demo.entity.Author;
 import com.example.demo.entity.Book;
 import com.example.demo.repository.BookRepository;
 import org.springframework.stereotype.Service;
@@ -11,9 +13,11 @@ import java.util.List;
 public class BookService {
 
     private final BookRepository bookRepo;
+    private final AuthorRepository authorRepo;
 
-    public BookService(BookRepository bookRepo) {
+    public BookService(BookRepository bookRepo, AuthorRepository authorRepo) {
         this.bookRepo = bookRepo;
+        this.authorRepo = authorRepo;
     }
 
     public Book getBookById(Long id) {
@@ -22,6 +26,8 @@ public class BookService {
     }
 
     public Book createBook(Book book) {
+        Author resolvedAuthor = resolveAuthor(book.getAuthor());
+        book.setAuthor(resolvedAuthor);
         return bookRepo.save(book);
     }
 
@@ -29,7 +35,8 @@ public class BookService {
         return bookRepo.findById(id)
                 .map(book -> {
                     book.setName(updatedBook.getName());
-                    book.setAuthor(updatedBook.getAuthor());
+                    Author resolvedAuthor = resolveAuthor(updatedBook.getAuthor());
+                    book.setAuthor(resolvedAuthor);
                     book.setPrice(updatedBook.getPrice());
                     return bookRepo.save(book);
                 })
@@ -47,10 +54,19 @@ public class BookService {
     }
 
     public List<Book> searchByAuthor(String author) {
-        return bookRepo.findByAuthorContainingIgnoreCase(author);
+        return bookRepo.findByAuthor_NameContainingIgnoreCase(author);
     }
 
     public List<Book> getAllBooks() {
         return bookRepo.findAll();
+    }
+    
+    private Author resolveAuthor(Author inputAuthor) {
+        if (inputAuthor == null || inputAuthor.getName() == null) {
+            throw new IllegalArgumentException("Author name must not be null");
+        }
+
+        return authorRepo.findByNameIgnoreCase(inputAuthor.getName())
+                .orElseGet(() -> authorRepo.save(new Author(inputAuthor.getName())));
     }
 }

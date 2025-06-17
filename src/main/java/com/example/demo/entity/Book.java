@@ -10,15 +10,18 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String author;
     private Double price;
+    
+    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinColumn(name = "author_id")
+    private Author author;
 
     @Override
    	public String toString() {
    		return "Book [id=" + id + ", name=" + name + ", author=" + author + ", price=" + price + "]";
    	}
     
-    public Book(Long id, String name, String author, Double price) {
+    public Book(Long id, String name, Author author, Double price) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -47,11 +50,11 @@ public class Book {
 		this.name = name;
 	}
 
-	public String getAuthor() {
+	public Author getAuthor() {
 		return author;
 	}
 
-	public void setAuthor(String author) {
+	public void setAuthor(Author author) {
 		this.author = author;
 	}
 
