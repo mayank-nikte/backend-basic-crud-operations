@@ -2,6 +2,8 @@ package com.example.demo.entity;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 
 @Entity
 public class Book {
@@ -9,9 +11,17 @@ public class Book {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+	
+	@NotBlank(message="Book name should not be empty")
     private String name;
+	
+	@NotNull(message="Price can not be empty")
+	@Positive(message="Price must be Positive")
     private Double price;
     
+	
+	@Valid
+	@NotNull(message="Author details are required")
     @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "author_id")
     private Author author;
