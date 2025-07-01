@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,10 @@ import java.util.List;
 @RequestMapping("/books")
 @Validated 
 public class BookController {
+	
+	@Value("${app.message.check}")
+    private String welcomeMsg;
+
 
     private final BookService bookService;
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
@@ -24,7 +29,12 @@ public class BookController {
     public BookController(BookService bookService) {
         this.bookService = bookService;
     }
-
+    
+    @GetMapping("/")
+    public String home() {
+    	logger.info(welcomeMsg);
+        return welcomeMsg;
+    }
     @GetMapping("/{id}")
     public ResponseEntity<Book> getBookById(@PathVariable Long id) {
         logger.info("Fetching book with ID: {}", id);
