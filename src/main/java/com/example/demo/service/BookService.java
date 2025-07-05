@@ -5,9 +5,17 @@ import com.example.demo.repository.AuthorRepository;
 import com.example.demo.entity.Author;
 import com.example.demo.entity.Book;
 import com.example.demo.repository.BookRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BookService {
@@ -25,11 +33,17 @@ public class BookService {
                 .orElseThrow(() -> new BookNotFoundException(id));
     }
 
-    public Book createBook(Book book) {
-        Author resolvedAuthor = resolveAuthor(book.getAuthor());
-        book.setAuthor(resolvedAuthor);
-        return bookRepo.save(book);
+    @Transactional
+    public List<Book> createBooks(List<Book> books) {
+        List<Book> processedBooks = books.stream().map(book -> {
+            Author resolvedAuthor = resolveAuthor(book.getAuthor());
+            book.setAuthor(resolvedAuthor);
+            return book;
+        }).collect(Collectors.toList());
+
+        return bookRepo.saveAll(processedBooks);
     }
+
 
     public Book updateBook(Long id, Book updatedBook) {
         return bookRepo.findById(id)
@@ -59,6 +73,10 @@ public class BookService {
 
     public List<Book> getAllBooks() {
         return bookRepo.findAll();
+    }
+    
+    public Page<Book> getAllBooks(Pageable pageable) {
+        return bookRepo.findAll(pageable);
     }
     
     private Author resolveAuthor(Author inputAuthor) {
